@@ -35,6 +35,7 @@ def student_from_json(obj: dict) -> Student:
     except Exception as e:
         raise ValueError(f"Invalid student data {obj}: {e}") from e
 
+# helper для валидации комнаты из сырого json-словаря
 def room_from_json(obj: dict) -> Room | None:
     try:
         # простая проверка id:int, name:str
