@@ -51,7 +51,7 @@ def load_rooms(db: DB, rooms_path: str, batch_size: int = 1000) -> int:
     elif isinstance(read_json, list):
         items = read_json
     else:
-        raise ValueError(f"Ожидался список комнат или ключ 'rooms' в {rooms_path}, получено: {type(data)}")
+        raise ValueError(f"Ожидался список комнат или ключ 'rooms' в {rooms_path}, получено: {type(read_json)}")
 
     # преобразовать в Room + tuples (id, name)
     rooms_tuple: list[tuple] = []
