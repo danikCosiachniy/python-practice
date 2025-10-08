@@ -1,42 +1,103 @@
+from contextlib import contextmanager
+from typing import Iterable, Mapping
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from contextlib import contextmanager
+
 
 class PostgresDB:
-    def __init__(self, dsn: str):
+    """
+    Реализация порта DB для PostgreSQL на psycopg2.
+    Возвращает строки как dict, поддерживает:
+      - контекстный менеджер для подключения (with PostgresDB(...))
+      - явные транзакции (with db.transaction())
+      - execute / executemany / query
+    """
+
+    
+    def __init__(self, dsn: str, autocommit : bool = False):
+        """
+        dsn-пример:
+        postgresql://app:app@localhost:5432/university
+        """
+
         self._dsn = dsn
         self._conn = None
-
+        self._autocommit = autocommit
+    
+    
+    # ---- lifecycle ----
     def connect(self) -> None:
-        if not self._conn:
-            # connect cursor_factory=RealDictCursor, autocommit=False
-            pass
+        if self._conn is None:
+            self._conn = psycopg2.connect(self._dsn, cursor_factory=RealDictCursor)
+            self._autocommit.autocommit = self._autocommit
+    
 
     def close(self) -> None:
-        # закрыть соединение при наличии
-        pass
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            finally:
+                self._conn = None
+    
 
-    def __enter__(self):
+    def __enter__(self) -> "PostgresDB":
         self.connect()
         return self
 
-    def __exit__(self, exc_type, exc, tb):
-        # commit если нет ошибок, иначе rollback; закрыть
-        pass
 
+    def __exit__(self, exc_type, exc, tb) -> None:
+        # Если работаем не в autocommit и вышли из with:
+        if self._conn and not self._autocommit:
+            if exc_type is None:
+                self._conn.commit()
+            else:
+                self._conn.rollback()
+        self.close()
+    
+
+    # ---- transaction validator ----
     @contextmanager
     def transaction(self):
-        # BEGIN; yield; COMMIT или ROLLBACK
-        pass
+        """
+        Использование:
+            with db.transaction():
+                db.execute(...)
+                db.executemany(...)
+        """
+        if self._conn is None:
+            self.connect()
+        # Начало «явной» транзакции для блока
+        try:
+            yield
+        except Exception:
+            if self._conn and not self._autocommit:
+                self._conn.rollback()
+            raise
+        else:
+            if self._conn and not self._autocommit:
+                self._conn.commit()
+    
 
-    def execute(self, sql, params=None):
-        # with cursor: cur.execute(sql, params)
-        pass
+    # ---- low-level ops ----
+    def execute(self, sql: str, params: tuple | Mapping | None = None) -> None:
+        if self._conn is None:
+            self.connect()
+        with self._conn.cursor as cursor:
+            cursor.execute(sql, params)
+    
 
-    def executemany(self, sql, params_seq):
-        # with cursor: cur.executemany(sql, params_seq)
-        pass
+    def executemany(self, sql: str, params : Iterable[tuple]) -> None:
+        if self._conn is None:
+            self.connect()
+        with self._conn.cursor as cursor:
+            cursor.executemany(sql, params)
 
-    def query(self, sql, params=None) -> list[dict]:
-        # with cursor: execute; rows = cur.fetchall(); return list(dict(row) ...)
-        pass
+
+    def query(self, sql: str, params: tuple | Mapping | None = None) -> list[dict]:
+        if self._conn is None:
+            self.connect()
+        with self._conn.cursor() as cur:
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+            # RealDictCursor уже даёт dict-подобные объекты
+            return [dict(r) for r in rows]
