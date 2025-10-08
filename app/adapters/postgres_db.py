@@ -29,7 +29,7 @@ class PostgresDB:
     def connect(self) -> None:
         if self._conn is None:
             self._conn = psycopg2.connect(self._dsn, cursor_factory=RealDictCursor)
-            self._autocommit.autocommit = self._autocommit
+            self._conn.autocommit = self._autocommit
     
 
     def close(self) -> None:
@@ -89,7 +89,7 @@ class PostgresDB:
     def executemany(self, sql: str, params : Iterable[tuple]) -> None:
         if self._conn is None:
             self.connect()
-        with self._conn.cursor as cursor:
+        with self._conn.cursor() as cursor:
             cursor.executemany(sql, params)
 
 

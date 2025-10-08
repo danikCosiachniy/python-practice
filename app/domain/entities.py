@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 @dataclass(frozen=True)
 class Room:
@@ -18,15 +18,16 @@ class Student:
 def student_from_json(obj: dict) -> Student:
     try:
         # извлечь id, name, sex, birthday(str), room -> room_id
-        student_id = int(obj[id])
-        name = str(obj[name])
-        sex = str(obj[sex])
+        student_id = int(obj["id"])
+        name = str(obj["name"])
+        sex = str(obj["sex"])
         # проверить sex ∈ {'M','F'}
         if sex not in {"M", "F"}:
             raise ValueError(f"Invalid sex '{sex}' (expected M/F)")
         # распарсить birthday (YYYY-MM-DD) -> date
-        birthday = date.fromisoformat(obj[birthday])
-        room_id = int(obj[room_id])
+        bday_raw = obj["birthday"]
+        birthday = datetime.fromisoformat(bday_raw).date()
+        room_id = int(obj["room"])
         # вернуть Student(...)
         return Student(student_id, name, sex, birthday, room_id)
     # Обработка ошибок
