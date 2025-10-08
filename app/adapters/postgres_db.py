@@ -2,9 +2,10 @@ from contextlib import contextmanager
 from typing import Iterable, Mapping
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from app.ports.db import DB
 
 
-class PostgresDB:
+class PostgresDB(DB):
     """
     Реализация порта DB для PostgreSQL на psycopg2.
     Возвращает строки как dict, поддерживает:
