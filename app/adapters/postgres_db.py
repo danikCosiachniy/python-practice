@@ -83,7 +83,7 @@ class PostgresDB(DB):
     def execute(self, sql: str, params: tuple | Mapping | None = None) -> None:
         if self._conn is None:
             self.connect()
-        with self._conn.cursor as cursor:
+        with self._conn.cursor() as cursor:
             cursor.execute(sql, params)
     
 

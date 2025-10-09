@@ -1,4 +1,4 @@
-import typer
+import os
 from app.adapters.postgres_db import PostgresDB
 from app.adapters.export_json import JsonExporter
 from app.adapters.export_xml import XmlExporter
@@ -16,12 +16,21 @@ def app():
     name_of_file = input("Введите название файла для выгрузки результата\n")
     if form not in name_of_file:
         name_of_file += '.' + form
-    db_url = input("Введите ссылку на бд \n")
+    host = os.environ.get("PGHOST", "localhost")
+    port = os.environ.get("PGPORT", "5432")
+    user = os.environ.get("PGUSER", "app")
+    pwd = os.environ.get("PGPASSWORD", "app")
+    dbn = os.environ.get("PGDATABASE", "university")
+    db_url = f"postgresql://{user}:{pwd}@{host}:{port}/{dbn}"
+    print(db_url)
     if form == 'json':
         exporter = JsonExporter()
     else:
         exporter = XmlExporter()
     with PostgresDB(db_url) as db:
+        schema_service.ensure_schema(db)
+        schema_service.ensure_indexes(db)
+        
         imported_rooms = load_service.load_rooms(db, rooms_json_path)
         imported_students = load_service.load_students(db, students_json_path)
         result = {
