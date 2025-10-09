@@ -22,7 +22,6 @@ def app():
     else:
         exporter = XmlExporter()
     with PostgresDB(db_url) as db:
-
         imported_rooms = load_service.load_rooms(db, rooms_json_path)
         imported_students = load_service.load_students(db, students_json_path)
         result = {
@@ -32,8 +31,7 @@ def app():
             "rooms_with_mixed_gender": query_service.mixed_gender_rooms(db),
             "meta": {"inserted_rooms": imported_rooms, "inserted_students": imported_students},
         }
-        print(result["top5_young_avg"])
-        exporter.dump(result, name_of_file)
+        exporter.dump(result, "data/results/" + name_of_file)
 
 if __name__ == "__main__":
     app()

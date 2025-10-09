@@ -9,8 +9,28 @@ class XmlExporter(Exporter):
     Реализация экспортера для сохранения данных в формате XML.
 
     Пример:
-        >>> data = {"rooms": [{"id": 1, "name": "Room #1"}]}
+        >>> data = {
+        ...     "rooms": [{"id": 1, "name": "Room #1"}],
+        ...     "students": [{"id": 5, "name": "Alice"}]
+        ... }
         >>> XmlExporter().dump(data, "result.xml")
+
+    Результат:
+        <?xml version="1.0" encoding="utf-8"?>
+        <result>
+            <query name="rooms">
+                <row>
+                    <id>1</id>
+                    <name>Room #1</name>
+                </row>
+            </query>
+            <query name="students">
+                <row>
+                    <id>5</id>
+                    <name>Alice</name>
+                </row>
+            </query>
+        </result>
     """
 
     def _convert_value(self, value):
@@ -60,7 +80,7 @@ class XmlExporter(Exporter):
 
         # Запись в файл с декларацией XML
         tree = ET.ElementTree(root)
-        
+        # Запись проводить в красивом формате, а не в одну строку 
         try:
             ET.indent(tree, space="  ", level=0)
         except AttributeError:
