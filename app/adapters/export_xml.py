@@ -1,8 +1,10 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+import logging
 import xml.etree.ElementTree as ET
 from app.ports.exporter import Exporter
 
+logger = logging.getLogger(__name__)
 
 class XmlExporter(Exporter):
     """
@@ -51,38 +53,45 @@ class XmlExporter(Exporter):
 
     def dump(self, data: dict, path: str) -> None:
         """Сохраняет данные в XML-файл."""
-        root = ET.Element("result")
-
-        # Каждый раздел (ключ в словаре) = отдельный <query name="...">
-        for section, rows in data.items():
-            query_elem = ET.SubElement(root, "query", name=section)
-
-            # Если секция — список записей
-            if isinstance(rows, list):
-                for row in rows:
-                    row_elem = ET.SubElement(query_elem, "row")
-                    if isinstance(row, dict):
-                        for key, value in row.items():
-                            ET.SubElement(row_elem, key).text = self._convert_value(value)
-                    else:
-                        # если это не dict — просто текстом
-                        ET.SubElement(row_elem, "value").text = self._convert_value(row)
-
-            # Если секция — просто словарь (например, meta)
-            elif isinstance(rows, dict):
-                row_elem = ET.SubElement(query_elem, "row")
-                for key, value in rows.items():
-                    ET.SubElement(row_elem, key).text = self._convert_value(value)
-
-            # Если секция — одиночное значение
-            else:
-                ET.SubElement(query_elem, "value").text = self._convert_value(rows)
-
-        # Запись в файл с декларацией XML
-        tree = ET.ElementTree(root)
-        # Запись проводить в красивом формате, а не в одну строку 
+        logger.info("Экспорт данных в XML")
         try:
-            ET.indent(tree, space="  ", level=0)
-        except AttributeError:
-            pass  
-        tree.write(path, encoding="utf-8", xml_declaration=True)
+            root = ET.Element("result")
+
+            # Каждый раздел (ключ в словаре) = отдельный <query name="...">
+            total_records = 0
+            for section, rows in data.items():
+                query_elem = ET.SubElement(root, "query", name=section)
+
+                if isinstance(rows, list):
+                    for row in rows:
+                        row_elem = ET.SubElement(query_elem, "row")
+                        total_records += 1
+                        if isinstance(row, dict):
+                            for key, value in row.items():
+                                ET.SubElement(row_elem, key).text = self._convert_value(value)
+                        else:
+                            ET.SubElement(row_elem, "value").text = self._convert_value(row)
+
+                elif isinstance(rows, dict):
+                    row_elem = ET.SubElement(query_elem, "row")
+                    total_records += 1
+                    for key, value in rows.items():
+                        ET.SubElement(row_elem, key).text = self._convert_value(value)
+
+                else:
+                    ET.SubElement(query_elem, "value").text = self._convert_value(rows)
+                    total_records += 1
+
+            # Запись в файл
+            tree = ET.ElementTree(root)
+            try:
+                ET.indent(tree, space="  ", level=0)
+            except AttributeError:
+                pass  # Python < 3.9
+            tree.write(path, encoding="utf-8", xml_declaration=True)
+
+            logger.info("XML экспорт завершён")
+
+        except Exception as e:
+            logger.error("При экспорте XML (%s): %s", path, e)
+            raise
