@@ -64,7 +64,7 @@ def app():
         imported_rooms = load_service.load_rooms(db, rooms_json_path)
         logger.info("Загружаем файл комнат в БД")
         imported_students = load_service.load_students(db, students_json_path)
-        logger.info("Выполняем запросы к БД и записываем реузльтат в словарь")
+        logger.info("Выполняем запросы к БД и записываем результат в словарь")
         # словарь для результатов запросов к БД
         result = {
             "count_student_in_rooms" : query_service.rooms_counts(db),
