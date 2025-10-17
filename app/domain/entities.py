@@ -27,7 +27,10 @@ def student_from_json(obj: dict) -> Student:
         # распарсить birthday (YYYY-MM-DD) -> date
         bday_raw = obj["birthday"]
         birthday = datetime.fromisoformat(bday_raw).date()
-        room_id = int(obj["room"])
+        room_id = obj.get("room_id", obj.get("room"))
+        if room_id is None:
+            raise KeyError("room_id")
+        room_id = int(room_id)
         # вернуть Student(...)
         return Student(student_id, name, sex, birthday, room_id)
     # Обработка ошибок
