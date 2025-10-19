@@ -1,6 +1,16 @@
+"""
+DСлужба управления схемами и индексами ATABASE.
+
+Считывает файлы схем SQL и индексов с диска и применяет их к базе данных.
+
+Функции:
+- `_read_sql()` – считывает содержимое файла SQL как строку.
+- `ensure_schema()` – выполняет SQL-запрос для создания схемы.
+- `ensure_indexes()` – выполняет SQL-запрос для создания индекса.
+"""
+import logging
 from pathlib import Path
 from app.ports.db import DB
-import logging
 
 logger = logging.getLogger(__name__)
 

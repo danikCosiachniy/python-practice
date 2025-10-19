@@ -1,8 +1,19 @@
+"""
+Экспортер JSON.
+
+Предоставляет `JsonExporter`, который сохраняет структурированные данные (dict)
+в JSON-файл с кодировкой UTF-8 и корректным форматированием.
+
+Возможности:
+- Выполняет сериализацию даты, даты и времени, дельты времени и десятичных чисел.
+- Записывает JSON-файл с отступами, удобочитаемый для человека.
+- Используется для экспорта результатов запросов или промежуточных наборов данных.
+"""
 import json
 import logging
-from app.ports.exporter import Exporter
-from datetime import date, datetime, timedelta
 from decimal import Decimal
+from datetime import date, datetime, timedelta
+from app.ports.exporter import Exporter
 
 logger = logging.getLogger(__name__)
 
