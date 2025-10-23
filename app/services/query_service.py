@@ -55,21 +55,6 @@ ORDER BY r.id;
 
 def _query_run(db : DB, sql: str, name: str)-> list[dict]:
     """Функция унификации запросов"""
-    if name == "rooms_counts":
-        logger.info(
-        "Выполняется запрос: Список комнат и количество студентов в каждой из них;")
-    elif name == "top5_young_avg":
-        logger.info(
-        "Выполняется запрос: 5 комнат с наименьшим средним возрастом студентов;")
-    elif name == "top5_age_spread":
-        logger.info(
-        "Выполняется запрос: 5 комнат с наибольшей разницей в возрасте студентов;")
-    elif name == "mixed_gender_rooms":
-        logger.info(
-        "Выполняется запрос: Список комнат, где проживают студенты разного пола;")
-    else:
-        logger.info(
-        "Выполняется запрос: %s", name)
     try:
         result = db.query(sql)
         return result
@@ -90,19 +75,27 @@ def _query_run(db : DB, sql: str, name: str)-> list[dict]:
 
 def rooms_counts(db: DB) -> list[dict]:
     """Функция для выполнения запроса на список комнат и количество студентов в каждой из них"""
+    logger.info(
+        "Выполняется запрос: Список комнат и количество студентов в каждой из них;")
     return _query_run(db, SQL_ROOMS_COUNT, "rooms_counts")
 
 
 def top5_young_avg(db: DB) -> list[dict]:
     """Функция для выполнения запроса на 5 комнат с наименьшим срденим возрастом студентов"""
+    logger.info(
+        "Выполняется запрос: 5 комнат с наименьшим средним возрастом студентов;")
     return _query_run(db, SQL_TOP5_YOUNG_AVG, "top5_young_avg")
 
 
 def top5_age_spread(db: DB) -> list[dict]:
     """Функция для выполнения запроса 5 комнат с наибольшей разницей в возрасте студентов"""
+    logger.info(
+        "Выполняется запрос: 5 комнат с наибольшей разницей в возрасте студентов;")
     return _query_run(db, SQL_TOP5_AGE_SPREAD, "top5_age_spread")
 
 
 def mixed_gender_rooms(db: DB) -> list[dict]:
     """Функция для выполнения запроса Список комнат, где проживают студенты разного пола;"""
+    logger.info(
+        "Выполняется запрос: Список комнат, где проживают студенты разного пола;")
     return _query_run(db, SQL_MIXED_GENDER, "mixed_gender_rooms")

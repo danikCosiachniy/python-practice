@@ -48,12 +48,7 @@ def _batched(iterable: Iterable, batch_size: int) -> Iterator[Sequence]:
         yield batch
 
 def _load_run(db: DB, path: str, type_of_data: str, batch_size: int = 1000) -> int:
-    """Функция для унификации функций загрузки данных студентов и комнат"""
-    logger.info("Запущена функция load_%s", type_of_data)
-    if type_of_data == "students":
-        logger.info("Читаем файл студентов")
-    elif type_of_data == "rooms":
-        logger.info("Читаем файл комнат")
+    """Функция для унификации функций загрузки данных студентов и комнат"""        
     # прочитать json (список)
     with open(path, encoding="utf-8") as file:
         read_json = json.load(file)
@@ -109,6 +104,8 @@ def load_rooms(db: DB, rooms_path: str, batch_size: int = 1000) -> int:
     Загружает данные о комнатах из JSON-файла и вставляет их в БД пакетами.
     Возвращает количество успешно обработанных записей.
     """
+    logger.info("Запущена функция load_rooms")
+    logger.info("Читаем файл комнат")
     return _load_run(db, rooms_path, "rooms", batch_size)
 
 def load_students(db: DB, students_path: str, batch_size: int = 1000) -> int:
@@ -116,4 +113,6 @@ def load_students(db: DB, students_path: str, batch_size: int = 1000) -> int:
     Загружает данные о студентах из JSON-файла и вставляет их в БД пакетами.
     Возвращает количество успешно обработанных записей.
     """
+    logger.info("Запущена функция load_students")
+    logger.info("Читаем файл студентов")
     return _load_run(db, students_path, "students", batch_size)
