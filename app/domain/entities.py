@@ -33,9 +33,6 @@ class Student:
 # helper для валидации студента из сырого json-словаря
 def student_from_json(obj: dict) -> Student:
     '''Это функция для преобразования данных студента из словаря JSON в класс данных Student.'''
-    logging.basicConfig(filename="logs/app.log",
-                        level=logging.INFO,
-                        format="%(asctime)s [%(levelname)s] %(message)s")
     try:
         # извлечь id, name, sex, birthday(str), room -> room_id
         student_id = int(obj["id"])
@@ -56,16 +53,13 @@ def student_from_json(obj: dict) -> Student:
     # Обработка ошибок
     except KeyError as e:
         logger.error("Пропущен студент — отсутствует поле '%s': %s", e.args[0], obj)
-        return None
+        raise ValueError(f"Missing field {e.args[0]} in student JSON: {obj}") from e
     except (TypeError, ValueError) as e:
         logger.error("Пропущен студент — некорректные данные: %s (%s)", obj, e)
-        return None
+        raise ValueError(f"Invalid student data {obj}: {e}") from e
 # helper для валидации комнаты из сырого json-словаря
 def room_from_json(obj: dict) -> Room | None:
     '''Это функция для преобразования данных студента из словаря JSON в класс данных Room.'''
-    logging.basicConfig(filename="logs/app.log",
-                        level=logging.INFO,
-                        format="%(asctime)s [%(levelname)s] %(message)s")
     try:
         # простая проверка id:int, name:str
         return Room(

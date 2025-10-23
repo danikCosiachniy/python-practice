@@ -17,130 +17,92 @@ from app.ports.db import DB
 logger = logging.getLogger(__name__)
 
 SQL_ROOMS_COUNT = """
-SELECT rooms.id, rooms.name, COUNT(students.room_id)
-FROM rooms LEFT JOIN students ON rooms.id = students.room_id
-GROUP BY rooms.id
-ORDER BY rooms.id;
+SELECT r.id, r.name, COUNT(s.room_id)
+FROM rooms AS r LEFT JOIN students AS s ON r.id = s.room_id
+GROUP BY r.id
+ORDER BY r.id;
 """
 
 SQL_TOP5_YOUNG_AVG = """
-SELECT rooms.id, rooms.name,
-       ROUND(EXTRACT(YEAR FROM AVG(AGE(students.birthday)))) AS avg_age_years
-FROM rooms
-JOIN students ON rooms.id = students.room_id
-GROUP BY rooms.id, rooms.name
+SELECT r.id, r.name,
+       ROUND(EXTRACT(YEAR FROM AVG(AGE(s.birthday)))) AS avg_age_years
+FROM rooms AS r
+JOIN students AS s ON r.id = s.room_id
+GROUP BY r.id, r.name
 ORDER BY avg_age_years ASC
 LIMIT 5;
 """
 
 SQL_TOP5_AGE_SPREAD = """
-SELECT rooms.id, rooms.name,
-       EXTRACT(YEAR FROM MAX(AGE(students.birthday))) -
-       EXTRACT(YEAR FROM MIN(AGE(students.birthday))) AS diff_age_years
-FROM rooms
-JOIN students ON rooms.id = students.room_id
-GROUP BY rooms.id, rooms.name
+SELECT r.id, r.name,
+       EXTRACT(YEAR FROM MAX(AGE(s.birthday))) -
+       EXTRACT(YEAR FROM MIN(AGE(s.birthday))) AS diff_age_years
+FROM rooms AS r
+JOIN students AS s ON r.id = s.room_id
+GROUP BY r.id, r.name
 ORDER BY diff_age_years DESC
 LIMIT 5;
 """
 
 SQL_MIXED_GENDER = """
-SELECT rooms.id, rooms.name
-FROM rooms
-JOIN students ON rooms.id = students.room_id
-GROUP BY rooms.id, rooms.name
-HAVING COUNT(DISTINCT students.sex) >= 2
-ORDER BY rooms.id;
+SELECT r.id, r.name
+FROM rooms AS r
+JOIN students AS s ON r.id = s.room_id
+GROUP BY r.id, r.name
+HAVING COUNT(DISTINCT s.sex) >= 2
+ORDER BY r.id;
 """
 
-
-def rooms_counts(db: DB) -> list[dict]:
-    """Функция для выполнения запроса на список комнат и количество студентов в каждой из них"""
-    logger.info(
+def _query_run(db : DB, sql: str, name: str)-> list[dict]:
+    """Функция унификации запросов"""
+    if name == "rooms_counts":
+        logger.info(
         "Выполняется запрос: Список комнат и количество студентов в каждой из них;")
+    elif name == "top5_young_avg":
+        logger.info(
+        "Выполняется запрос: 5 комнат с наименьшим средним возрастом студентов;")
+    elif name == "top5_age_spread":
+        logger.info(
+        "Выполняется запрос: 5 комнат с наибольшей разницей в возрасте студентов;")
+    elif name == "mixed_gender_rooms":
+        logger.info(
+        "Выполняется запрос: Список комнат, где проживают студенты разного пола;")
+    else:
+        logger.info(
+        "Выполняется запрос: %s", name)
     try:
-        result = db.query(SQL_ROOMS_COUNT)
+        result = db.query(sql)
         return result
     except ProgrammingError as e:
         # Ошибка в синтаксисе SQL или структура таблицы не совпадает
-        logger.error("Ошибка SQL-синтаксиса в rooms_counts: %s", e)
+        logger.error("Ошибка SQL-синтаксиса в %s: %s", name, e)
         return []
 
     except (TypeError, ValueError) as e:
         # Ошибки преобразования данных, если что-то не так с типами
-        logger.error("Ошибка типов данных при обработке rooms_counts: %s", e)
+        logger.error("Ошибка типов данных при обработке %s: %s", name, e)
         return []
 
     except Exception as e:  # pylint: disable=broad-exception-caught
         # Непредвиденные ошибки — логируем, но не падаем
-        logger.exception("Неизвестная ошибка при rooms_counts: %s", e)
+        logger.exception("Неизвестная ошибка при %s: %s", name, e)
         return []
+
+def rooms_counts(db: DB) -> list[dict]:
+    """Функция для выполнения запроса на список комнат и количество студентов в каждой из них"""
+    return _query_run(db, SQL_ROOMS_COUNT, "rooms_counts")
 
 
 def top5_young_avg(db: DB) -> list[dict]:
     """Функция для выполнения запроса на 5 комнат с наименьшим срденим возрастом студентов"""
-    logger.info(
-        "Выполняется запрос: 5 комнат с наименьшим средним возрастом студентов;")
-    try:
-        result = db.query(SQL_TOP5_YOUNG_AVG)
-        return result
-    except ProgrammingError as e:
-        # Ошибка в синтаксисе SQL или структура таблицы не совпадает
-        logger.error("Ошибка SQL-синтаксиса в top5_young_avg: %s", e)
-        return []
-
-    except (TypeError, ValueError) as e:
-        # Ошибки преобразования данных, если что-то не так с типами
-        logger.error("Ошибка типов данных при обработке top5_young_avg: %s", e)
-        return []
-
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        # Непредвиденные ошибки — логируем, но не падаем
-        logger.exception("Неизвестная ошибка при top5_young_avg: %s", e)
-        return []
+    return _query_run(db, SQL_TOP5_YOUNG_AVG, "top5_young_avg")
 
 
 def top5_age_spread(db: DB) -> list[dict]:
     """Функция для выполнения запроса 5 комнат с наибольшей разницей в возрасте студентов"""
-    logger.info(
-        "Выполняется запрос: 5 комнат с наибольшей разницей в возрасте студентов;")
-    try:
-        result = db.query(SQL_TOP5_AGE_SPREAD)
-        return result
-    except ProgrammingError as e:
-        # Ошибка в синтаксисе SQL или структура таблицы не совпадает
-        logger.error("Ошибка SQL-синтаксиса в top5_age_spread: %s", e)
-        return []
-
-    except (TypeError, ValueError) as e:
-        # Ошибки преобразования данных, если что-то не так с типами
-        logger.error("Ошибка типов данных при обработке top5_age_spread: %s", e)
-        return []
-
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        # Непредвиденные ошибки — логируем, но не падаем
-        logger.exception("Неизвестная ошибка при top5_age_spread: %s", e)
-        return []
+    return _query_run(db, SQL_TOP5_AGE_SPREAD, "top5_age_spread")
 
 
 def mixed_gender_rooms(db: DB) -> list[dict]:
     """Функция для выполнения запроса Список комнат, где проживают студенты разного пола;"""
-    logger.info(
-        "Выполняется запрос: Список комнат, где проживают студенты разного пола;")
-    try:
-        result = db.query(SQL_MIXED_GENDER)
-        return result
-    except ProgrammingError as e:
-        # Ошибка в синтаксисе SQL или структура таблицы не совпадает
-        logger.error("Ошибка SQL-синтаксиса в mixed_gender_rooms: %s", e)
-        return []
-
-    except (TypeError, ValueError) as e:
-        # Ошибки преобразования данных, если что-то не так с типами
-        logger.error("Ошибка типов данных при обработке mixed_gender_rooms: %s", e)
-        return []
-
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        # Непредвиденные ошибки — логируем, но не падаем
-        logger.exception("Неизвестная ошибка при mixed_gender_rooms: %s", e)
-        return []
+    return _query_run(db, SQL_MIXED_GENDER, "mixed_gender_rooms")

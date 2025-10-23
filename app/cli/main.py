@@ -43,11 +43,11 @@ def app() -> None:
             name_of_file += '.' + form
         # Читаем параметры для создания ссылки для подключения к БД
         logger.info("Читаем параметры для подключения к БД")
-        host = os.environ.get("PGHOST", "localhost")
-        port = os.environ.get("PGPORT", "5432")
-        user = os.environ.get("PGUSER", "app")
-        pwd = os.environ.get("PGPASSWORD", "app")
-        dbn = os.environ.get("PGDATABASE", "university")
+        host = os.environ.get("PGHOST")
+        port = os.environ.get("PGPORT")
+        user = os.environ.get("PGUSER")
+        pwd = os.environ.get("PGPASSWORD")
+        dbn = os.environ.get("PGDATABASE")
         logger.info("Создаем ссылку на БД")
         db_url = f"postgresql://{user}:{pwd}@{host}:{port}/{dbn}"
 

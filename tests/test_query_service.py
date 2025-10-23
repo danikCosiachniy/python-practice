@@ -26,7 +26,7 @@ class TestQueryService(unittest.TestCase):
     def test_mixed_gender_rooms_sql(self):
         db = FakeDB(); db.set_query_result([{"id":1}])
         qs.mixed_gender_rooms(db)
-        self.assertIn("having count(distinct students.sex) >= 2",
+        self.assertIn("having count(distinct s.sex) >= 2",
                       db.queries[0][0].lower())
 
 if __name__ == "__main__":
